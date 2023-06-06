@@ -260,6 +260,76 @@ def test_awsc(debug=False, log_file=None):
 
 
 # --------------------------------------------------
+def prune_backups(s3_bucket, days=7, use_boto=False, debug=False, log_file=None):
+    """Prunes old backups from an S3 bucket.
+
+    Args:
+        s3_bucket (str): The name of the S3 bucket to prune.
+        days (int): The number of days to keep backups for.
+        use_boto (bool): Whether to use the Boto3 library (True) or the AWS CLI (False)
+        debug (bool): Whether to print debug messages.
+        log_file (str): The path to the log file.
+
+    Returns:
+        bool: True if pruning was successful, False otherwise.
+    """
+
+    if use_boto:
+        try:
+            import boto3
+            s3 = boto3.resource("s3")
+            bucket = s3.Bucket(s3_bucket)
+            for obj in bucket.objects.all():
+                if obj.last_modified < datetime.datetime.now(
+                    datetime.timezone.utc
+                ) - datetime.timedelta(days=days):
+                    obj.delete()
+            return True
+        except Exception as e:
+            print(f"Pruning via Boto3 failed: {e}") if debug else None
+            with open(log_file, "a") as f:
+                f.write(f"Pruning via Boto3 failed: {e}")
+            return False
+    else:
+        try:
+            # create list of backups to delete
+            backups_to_keep = []
+            bucket_name = s3_bucket.replace("s3://", "")
+            command = f"aws s3 ls s3://{bucket_name} --recursive"
+            output = subprocess.check_output(command, shell=True).decode('utf-8')
+            objects = []
+
+            # Process the output
+            lines = output.strip().split('\n')
+            for line in lines:
+                parts = line.split()
+                if len(parts) > 3:
+                    item = [parts[0], parts[2]]
+                    objects.append(item)
+
+            subprocess.run(
+                [
+                    "aws",
+                    "s3",
+                    "rm",
+                    s3_bucket,
+                    "--recursive",
+                    "--exclude",
+                    "*",
+                    "--include",
+                    f"*{days}*.7z",
+                ],
+                check=True,
+            )
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Pruning via AWS CLI failed: {e}") if debug else None
+            with open(log_file, "a") as f:
+                f.write(f"Pruning via AWS CLI failed: {e}")
+            return False
+
+
+# --------------------------------------------------
 def main():
     """Do the heavy lifting of backing up the BestCase CLIENTS directory
     to an S3 bucket"""
