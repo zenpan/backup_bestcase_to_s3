@@ -298,7 +298,7 @@ def main():
     # Use config file if provided, else use command line arguments
     if config_file is not None:
         config = json.load(config_file)
-        directory_path = config["clients"]
+        directory_path = config["best_case_dir"]
         s3_bucket = config["s3"]
         debug = config["debug"]
         use_boto3 = config["use_boto3"]
