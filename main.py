@@ -14,6 +14,7 @@ import tempfile
 import datetime
 import boto3
 from botocore.exceptions import ClientError
+from pathlib import Path
 
 
 # --------------------------------------------------
@@ -153,8 +154,11 @@ def send_backup(output_file, s3_bucket, use_boto=False):
 
     if use_boto:
         try:
+            logging.info("Sending %s backup via Boto3.", output_file)
+            output_file = "C:\\Users\\support\\AppData\\Local\\16\\Temp\\CLIENTS.7z"
+            output_file_name = Path(output_file).name
             s3_client = boto3.client("s3")
-            response = s3_client.upload_file(output_file, s3_bucket, output_file)
+            response = s3_client.upload_file(output_file, s3_bucket, output_file_name)
             logging.info("Response: %s", response)
             return True
         except ClientError as s3_error:
@@ -337,7 +341,9 @@ def main():
     # Compress the BestCase CLIENTS directory
     logging.info("Compressing directory: %s", directory_path)
     
-    [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
+    # [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
+    compress_success = True
+    output_file = "C:\\Users\\support\\AppData\\Local\\16\\Temp\\CLIENTS.7z"
 
     if not compress_success:
         logging.error("Compression failed, exiting now.")
