@@ -19,7 +19,7 @@ def test_whether_boto3_is_installed(doc_site):
         import boto3
     except ImportError:
         logging.warning("ERROR: boto3 is not installed")
-        logging.warning("Please see %d for installation instructions", doc_site)
+        logging.warning("Please see %s for installation instructions", doc_site)
 
         return False
 
@@ -38,7 +38,7 @@ def install_boto3():
         )
     except subprocess.CalledProcessError as called_error:
         logging.warning("ERROR: boto3 could not be installed")
-        logging.warning("ERROR: %d", called_error)
+        logging.warning("ERROR: %s", called_error)
         logging.warning("Please install boto3 manually")
         return False
 
@@ -57,7 +57,7 @@ def test_aws_cli_is_installed():
         )
     except subprocess.CalledProcessError as called_error:
         logging.warning("ERROR: AWS CLI is not installed")
-        logging.warning("ERROR: %d", called_error)
+        logging.warning("ERROR: %s", called_error)
         return False
 
     return True
@@ -76,8 +76,8 @@ def test_aws_cli_is_configured(doc_site):
         )
     except subprocess.CalledProcessError as called_error:
         logging.warning("ERROR: AWS CLI is not configured")
-        logging.warning("ERROR: %d", called_error)
-        logging.warning("Please see %d for configuration instructions", doc_site)
+        logging.warning("ERROR: %s", called_error)
+        logging.warning("Please see %s for configuration instructions", doc_site)
         return False
 
     return True
@@ -87,12 +87,12 @@ def test_aws_cli_is_configured(doc_site):
 def test_best_case_dir(best_case_dir):
     """Test if the Best Case directory exists"""
     if not os.path.isdir(best_case_dir):
-        logging.critical("ERROR: '%d' is not a directory", best_case_dir)
+        logging.critical("ERROR: '%s' is not a directory", best_case_dir)
         logging.warning("Please check your Best Case directory and try again")
         return False
     clients_dir = os.path.join(best_case_dir, "CLIENTS")
     if not os.path.isdir(clients_dir):
-        logging.critical("ERROR: '%d' is not a directory", clients_dir)
+        logging.critical("ERROR: '%s' is not a directory", clients_dir)
         logging.warning("Please check your Best Case directory and try again")
         return False
     return True
@@ -109,8 +109,8 @@ def new_s3_bucket(s3_bucket):
             check=True,
         )
     except subprocess.CalledProcessError as called_error:
-        logging.warning("ERROR: AWS S3 bucket '%d' could not be created", s3_bucket)
-        logging.warning("ERROR: %d", called_error)
+        logging.warning("ERROR: AWS S3 bucket '%s' could not be created", s3_bucket)
+        logging.warning("ERROR: %s", called_error)
         logging.warning("Please choose a different name for your S3 bucket")
         return False
 
@@ -129,8 +129,8 @@ def test_s3_bucket(s3_bucket):
             check=True,
         )
     except subprocess.CalledProcessError as called_error:
-        logging.warning("ERROR: AWS S3 bucket '%d' does not exist", s3_bucket)
-        logging.warning("ERROR: %d", called_error)
+        logging.warning("ERROR: AWS S3 bucket '%s' does not exist", s3_bucket)
+        logging.warning("ERROR: %s", called_error)
         logging.warning("Please create the S3 bucket or specify a different S3 bucket")
         return False
 
@@ -202,7 +202,7 @@ def main():
         input("Press Enter to install boto3")
         if not install_boto3():
             logging.error("ERROR: boto3 could not be installed")
-            logging.error("ERROR: Please see %d for installation instructions", doc_site)
+            logging.error("ERROR: Please see %s for installation instructions", doc_site)
             input("Do you want to continue without installing boto3? (Y/N): ")
             if input.lower() == "y":
                 use_boto3 = False
@@ -216,7 +216,7 @@ def main():
     if not test_aws_cli_is_installed():
         logging.error("ERROR: AWS CLI is not installed and boto3 is not installed")
         logging.error(
-            "ERROR: Please install AWS CLI. See %d for instructions.", windows_doc_site
+            "ERROR: Please install AWS CLI. See %s for instructions.", windows_doc_site
         )
         sys.exit(1)
     if not test_aws_cli_is_configured(doc_site):
