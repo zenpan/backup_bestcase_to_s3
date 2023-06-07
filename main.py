@@ -299,7 +299,7 @@ def main():
     if config_file is not None:
         config = json.load(config_file)
         directory_path = config["best_case_dir"]
-        s3_bucket = config["s3"]
+        s3_bucket = config["s3_bucket"]
         debug = config["debug"]
         use_boto3 = config["use_boto3"]
     else:
