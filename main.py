@@ -10,6 +10,7 @@ import subprocess
 import os
 import datetime
 import logging
+import json
 
 
 # --------------------------------------------------
@@ -27,6 +28,7 @@ def get_args():
         help="BestCase CLIENTS Directory",
         metavar="str",
         type=str,
+        required=False,
         default="C:\BestCase\CLIENTS",
     )
 
@@ -36,15 +38,25 @@ def get_args():
         help="S3 bucket full name",
         metavar="str",
         type=str,
+        required=False,
         default="s3://my-bestcase-backup",
     )
 
     parser.add_argument(
-        "-d", "--debug", help="Whether to run in Debug mode", action="store_false"
+        "-d",
+        "--debug",
+        help="Whether to run in Debug mode",
+        required=False,
+        action="store_false",
     )
 
     parser.add_argument(
-        "-l", "--log", help="Log file", metavar="str", type=str, default="None"
+        "-f",
+        "--config-file",
+        help="Path to config file",
+        metavar="FILE",
+        required=False,
+        type=argparse.FileType("r"),
     )
 
     return parser.parse_args()
@@ -140,6 +152,7 @@ def send_backup(output_file, s3_bucket, use_boto=False, debug=False, log_file=No
     if use_boto:
         try:
             import boto3
+
             s3 = boto3.resource("s3")
             s3.meta.client.upload_file(output_file, s3_bucket, output_file)
             return True
@@ -181,6 +194,7 @@ def send_msg_SNS(
     if use_boto:
         try:
             import boto3
+
             sns = boto3.client("sns")
             sns.publish(TopicArn=recipient, Message=message, Subject=subject)
             return True
@@ -216,6 +230,7 @@ def test_boto3(debug=False, log_file=None):
     try:
         # test if boto3 is installed
         import boto3
+
         return True
     except ModuleNotFoundError:
         logging.error("boto3 is not installed.")
@@ -256,6 +271,7 @@ def prune_backups(s3_bucket, days=7, use_boto=False, debug=False, log_file=None)
     if use_boto:
         try:
             import boto3
+
             s3 = boto3.resource("s3")
             bucket = s3.Bucket(s3_bucket)
             for obj in bucket.objects.all():
@@ -273,11 +289,11 @@ def prune_backups(s3_bucket, days=7, use_boto=False, debug=False, log_file=None)
             backups_to_keep = []
             bucket_name = s3_bucket.replace("s3://", "")
             command = f"aws s3 ls s3://{bucket_name} --recursive"
-            output = subprocess.check_output(command, shell=True).decode('utf-8')
+            output = subprocess.check_output(command, shell=True).decode("utf-8")
             objects = []
 
             # Process the output
-            lines = output.strip().split('\n')
+            lines = output.strip().split("\n")
             for line in lines:
                 parts = line.split()
                 if len(parts) > 3:
@@ -311,10 +327,7 @@ def main():
 
     main_start_time = datetime.datetime.now()
     args = get_args()
-    directory_path = args.clients
-    s3_bucket = args.s3
-    debug = args.debug
-    log_file = args.log
+    config_file = args.config_file
 
     use_boto = False
     use_aws = False
@@ -324,7 +337,18 @@ def main():
         logging.debug(f'CLIENTS directory = "{directory_path}"')
         logging.debug(f'S3 backup bucket = "{s3_bucket}"')
         logging.debug(f'Debug = "{debug}"')
-        logging.debug(f'Log file = "{log_file}"')
+        logging.debug(f'Config file = "{config_file}"')
+
+    # Use config file if provided, else use command line arguments
+    if config_file is not None:
+        config = json.load(config_file)
+        directory_path = config["clients"]
+        s3_bucket = config["s3"]
+        debug = config["debug"]
+    else:
+        directory_path = args.clients
+        s3_bucket = args.s3
+        debug = args.debug
 
     # Exit if S3 bucket is 's3://my-bestcase-backup'
     if s3_bucket == "s3://my-bestcase-backup":
@@ -335,24 +359,29 @@ def main():
     # Define location of log file
     if log_file == "None":
         import tempfile
+
         temp_dir = tempfile.gettempdir()
         log_file = temp_dir + "\\BestCaseBackup.log"
-    
-    logging.basicConfig(filename=log_file, encoding='utf-8', level=logging.DEBUG)
+
+    logging.basicConfig(filename=log_file, encoding="utf-8", level=logging.DEBUG)
     if debug:
-        logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.DEBUG)
+        logging.basicConfig(
+            format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG
+        )
     else:
-        logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.INFO)
+        logging.basicConfig(
+            format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO
+        )
     log_start_time = datetime.datetime.now()
     logging.info(f"Log started at {log_start_time}")
 
-    # if we are using boto3, test if boto3 is installed otherwise 
+    # if we are using boto3, test if boto3 is installed otherwise
     # test if aws cli is installed - Exit if neither is installed
     use_boto = test_boto3(debug, log_file)
     if use_boto == False:
         use_aws = test_awsc(debug, log_file)
         if use_aws == False:
-            logging.error('No AWS CLI or boto3 found, exiting.')
+            logging.error("No AWS CLI or boto3 found, exiting.")
             return False
 
     # Compress the BestCase CLIENTS directory
