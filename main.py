@@ -334,6 +334,7 @@ def main():
     
     # Compress the BestCase CLIENTS directory
     logging.info("Compressing directory: %s", directory_path)
+    logging.info("Output file: %s", output_file)
     exit(0)
     [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
 
