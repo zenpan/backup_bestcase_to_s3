@@ -108,11 +108,8 @@ def compress_dir_7z(directory_path, output_file=None):
         logging.critical("7z is not installed or is not working.")
         return [False, None]
 
+    clients_path = directory_path + "\\CLIENTS\\"  # 7z needs the trailing slash
     try:
-        clients_path = directory_path + "\\CLIENTS\\"
-        logging.info("Compressing directory: %s", clients_path)
-        logging.info("Output file: %s", output_file)
-        exit(0)
         subprocess.run(
             [
                 "7z",
