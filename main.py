@@ -82,11 +82,11 @@ def compress_dir_7z(directory_path, output_file=None):
     """
 
     if not os.path.exists(directory_path):
-        logging.critical("Directory '%d' does not exist.", directory_path)
+        logging.critical("Directory '%s' does not exist.", directory_path)
         return [False, None]
 
     if not os.path.isdir(directory_path):
-        logging.critical("Path '%d' is not a directory.", directory_path)
+        logging.critical("Path '%s' is not a directory.", directory_path)
         return [False, None]
 
     # Set default output path to TEMP directory if not provided
@@ -122,7 +122,7 @@ def compress_dir_7z(directory_path, output_file=None):
         )
         return [True, output_file]
     except subprocess.CalledProcessError as called_error:
-        logging.critical("Compression failed: %d", called_error)
+        logging.critical("Compression failed: %s", called_error)
         return [False, None]
 
 
@@ -142,28 +142,28 @@ def send_backup(output_file, s3_bucket, use_boto=False):
     """
 
     if not os.path.exists(output_file):
-        logging.error("File '%d' does not exist.", output_file)
+        logging.error("File '%s' does not exist.", output_file)
         return False
 
     if not os.path.isfile(output_file):
-        logging.error("Path '%d' is not a file.", output_file)
+        logging.error("Path '%s' is not a file.", output_file)
         return False
 
     if use_boto:
         try:
             s3_client = boto3.client("s3")
             response = s3_client.upload_file(output_file, s3_bucket, output_file)
-            logging.info("Response: %d", response)
+            logging.info("Response: %s", response)
             return True
         except ClientError as s3_error:
-            logging.critical("Sending backup via Boto3 failed: %d", s3_error)
+            logging.critical("Sending backup via Boto3 failed: %s", s3_error)
             return False
     else:
         try:
             subprocess.run(["aws", "s3", "cp", output_file, s3_bucket], check=True)
             return True
         except subprocess.CalledProcessError as called_error:
-            logging.critical("Sending backup via AWS CLI failed: %d", called_error)
+            logging.critical("Sending backup via AWS CLI failed: %s", called_error)
             return False
 
 
@@ -195,7 +195,7 @@ def send_msg_sns(message, recipient, use_boto=False, subject=None):
             return True
         except ClientError as client_error:
             logging.critical(
-                "Sending message via Boto3 to SNS topic failed: %d", client_error
+                "Sending message via Boto3 to SNS topic failed: %s", client_error
             )
             return False
     else:
@@ -217,7 +217,7 @@ def send_msg_sns(message, recipient, use_boto=False, subject=None):
             return True
         except subprocess.CalledProcessError as called_error:
             logging.critical(
-                "Sending message via AWS CLI to SNS topic failed: %d", called_error
+                "Sending message via AWS CLI to SNS topic failed: %s", called_error
             )
             return False
 
@@ -248,7 +248,7 @@ def prune_backups(s3_bucket, days=7, use_boto=False):
                     obj.delete()
             return True
         except ClientError as client_error:
-            logging.critical("Pruning via Boto3 failed: %d", client_error)
+            logging.critical("Pruning via Boto3 failed: %s", client_error)
             return False
     else:
         try:
@@ -283,7 +283,7 @@ def prune_backups(s3_bucket, days=7, use_boto=False):
             )
             return True
         except subprocess.CalledProcessError as called_error:
-            logging.critical("Pruning via AWS CLI failed: %d", called_error)
+            logging.critical("Pruning via AWS CLI failed: %s", called_error)
             return False
 
 
@@ -339,7 +339,7 @@ def main():
         logging.error("Compression failed, exiting now.")
         return False
 
-    logging.info("Compressed file: %d", output_file)
+    logging.info("Compressed file: %s", output_file)
 
     # Send the backup to the S3 bucket
     try:
@@ -350,7 +350,7 @@ def main():
         logging.info("Backup sent successfully.")
         return True
     except ClientError as send_error:
-        logging.critical("Sending backup failed: %d", send_error)
+        logging.critical("Sending backup failed: %s", send_error)
         return False
     finally:
         os.remove(output_file)
@@ -362,4 +362,4 @@ if __name__ == "__main__":
     main()
     end_time = datetime.datetime.now()
     elapsed_time = end_time - start_time
-    logging.info("Elapsed time: %d", elapsed_time)
+    logging.info("Elapsed time: %s", elapsed_time)
