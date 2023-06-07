@@ -151,9 +151,9 @@ def create_config_file(use_boto3):
 
     # Prompt for AWS S3 bucket for backups
     test_s3_bucket_exists = False
-    create_s3_bucket = False
+    s3_bucket_defined = False
 
-    while not create_s3_bucket:
+    while not s3_bucket_defined:
         do_create_s3_bucket = input(
             "Do you want to create an AWS S3 bucket for backups? (Y/N): "
         )
@@ -161,13 +161,14 @@ def create_config_file(use_boto3):
             s3_bucket = input(
                 "What do you want to call the AWS S3 bucket? E.g. s3://my-bestcase-backups: "
             )
-            create_s3_bucket = new_s3_bucket(s3_bucket)
+            s3_bucket_defined = new_s3_bucket(s3_bucket)
         else:
             while not test_s3_bucket_exists:
                 s3_bucket = input(
                     "What S3 bucket will you use to store your backups? E.g. s3://my-bc-backups: "
                 )
                 test_s3_bucket_exists = test_s3_bucket(s3_bucket)
+            s3_bucket_defined = True
 
     config["s3_bucket"] = s3_bucket
 
