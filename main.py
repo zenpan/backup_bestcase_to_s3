@@ -109,7 +109,8 @@ def compress_dir_7z(directory_path, output_file=None):
         return [False, None]
 
     try:
-        logging.info("Compressing directory: %s", directory_path)
+        clients_path = directory_path + "\\CLIENTS\\"
+        logging.info("Compressing directory: %s", clients_path)
         logging.info("Output file: %s", output_file)
         exit(0)
         subprocess.run(
@@ -117,7 +118,7 @@ def compress_dir_7z(directory_path, output_file=None):
                 "7z",
                 "a",  # Add files to archive
                 output_file,
-                directory_path,
+                clients_path,
                 "-r",  # Recurse subdirectories
                 "-mx=9",  # Set maximum compression level
                 "-mmt=on",  # Use multithreading
