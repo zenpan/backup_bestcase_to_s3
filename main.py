@@ -100,6 +100,7 @@ def compress_dir_7z(directory_path, output_file=None):
     try:
         # test if 7z is installed
         subprocess.run(["7z"], stdout=subprocess.DEVNULL, check=True)
+        logging.info("7z is installed.")
     except FileNotFoundError:
         logging.critical("7z is not installed.")
         return [False, None]
@@ -108,6 +109,9 @@ def compress_dir_7z(directory_path, output_file=None):
         return [False, None]
 
     try:
+        logging.info("Compressing directory: %s", directory_path)
+        logging.info("Output file: %s", output_file)
+        exit(0)
         subprocess.run(
             [
                 "7z",
@@ -334,8 +338,7 @@ def main():
     
     # Compress the BestCase CLIENTS directory
     logging.info("Compressing directory: %s", directory_path)
-    logging.info("Output file: %s", output_file)
-    exit(0)
+    
     [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
 
     if not compress_success:
