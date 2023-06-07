@@ -156,7 +156,6 @@ def send_backup(output_file, s3_bucket, use_boto=False):
         try:
             s3_bucket = s3_bucket.replace("s3://", "")
             logging.info("Sending %s backup via Boto3.", output_file)
-            output_file = "C:\\Users\\support\\AppData\\Local\\Temp\\16\\CLIENTS.7z"
             output_file_name = Path(output_file).name
             s3_client = boto3.client("s3")
             response = s3_client.upload_file(output_file, s3_bucket, output_file_name)
@@ -342,9 +341,7 @@ def main():
     # Compress the BestCase CLIENTS directory
     logging.info("Compressing directory: %s", directory_path)
     
-    # [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
-    compress_success = True
-    output_file = "C:\\Users\\support\\AppData\\Local\\Temp\\16\CLIENTS.7z"
+    [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
 
     if not compress_success:
         logging.error("Compression failed, exiting now.")
