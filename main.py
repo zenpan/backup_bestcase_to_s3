@@ -331,8 +331,10 @@ def main():
             level=logging.INFO,
         )
     logging.info("Log started at %s", datetime.datetime.now())
-    exit(0)
+    
     # Compress the BestCase CLIENTS directory
+    logging.info("Compressing directory: %s", directory_path)
+    exit(0)
     [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
 
     if not compress_success:
