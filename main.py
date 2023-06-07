@@ -300,7 +300,7 @@ def main():
         config = json.load(config_file)
         directory_path = config["best_case_dir"]
         s3_bucket = config["s3_bucket"]
-        debug = config["debug"]
+        debug = config["debug_mode"]
         use_boto3 = config["use_boto3"]
     else:
         logging.critical("No config file provided, exiting.")
