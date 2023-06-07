@@ -330,7 +330,7 @@ def main():
             format="%(asctime)s %(levelname)s: %(message)s",
             level=logging.INFO,
         )
-    logging.info("Log started at %d", datetime.datetime.now())
+    logging.info("Log started at %s", datetime.datetime.now())
     exit(0)
     # Compress the BestCase CLIENTS directory
     [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
