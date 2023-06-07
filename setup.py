@@ -159,7 +159,7 @@ def create_config_file(use_boto3):
         )
         if do_create_s3_bucket.lower() == "y":
             s3_bucket = input(
-                "What do you want to call the AWS S3 bucket? E.g. my-bestcase-backups: "
+                "What do you want to call the AWS S3 bucket? E.g. s3://my-bestcase-backups: "
             )
             create_s3_bucket = new_s3_bucket(s3_bucket)
         else:
