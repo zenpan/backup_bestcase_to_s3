@@ -343,7 +343,7 @@ def main():
     
     # [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
     compress_success = True
-    output_file = "C:\\Users\\support\\AppData\\Local\\16\\Temp\\CLIENTS.7z"
+    output_file = "C:\\Users\\support\\AppData\\Local\\Temp\\16\CLIENTS.7z"
 
     if not compress_success:
         logging.error("Compression failed, exiting now.")
