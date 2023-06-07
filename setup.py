@@ -211,6 +211,8 @@ def main():
                 sys.exit(1)
         else:
             use_boto3 = True
+    else:
+        use_boto3 = True
     if not test_aws_cli_is_installed():
         logging.error("ERROR: AWS CLI is not installed and boto3 is not installed")
         logging.error(
