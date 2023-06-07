@@ -155,7 +155,7 @@ def send_backup(output_file, s3_bucket, use_boto=False):
     if use_boto:
         try:
             logging.info("Sending %s backup via Boto3.", output_file)
-            output_file = "C:\\Users\\support\\AppData\\Local\\16\\Temp\\CLIENTS.7z"
+            output_file = "C:\\Users\\support\\AppData\\Local\\Temp\\16\\CLIENTS.7z"
             output_file_name = Path(output_file).name
             s3_client = boto3.client("s3")
             response = s3_client.upload_file(output_file, s3_bucket, output_file_name)
