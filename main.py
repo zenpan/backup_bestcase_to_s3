@@ -15,6 +15,7 @@ import datetime
 import boto3
 from botocore.exceptions import ClientError
 from pathlib import Path
+import psutil
 
 
 # --------------------------------------------------
@@ -294,6 +295,13 @@ def prune_backups(s3_bucket, days=7, use_boto=False):
 
 
 # --------------------------------------------------
+def close_processes_by_name(process_name):
+    for process in psutil.process_iter(['name']):
+        if process.info['name'] == process_name:
+            process.kill()
+
+
+# --------------------------------------------------
 def main():
     """Do the heavy lifting of backing up the BestCase CLIENTS directory
     to an S3 bucket"""
@@ -341,6 +349,8 @@ def main():
     # Compress the BestCase CLIENTS directory
     logging.info("Compressing directory: %s", directory_path)
     
+    # close all BestCase processes
+    close_processes_by_name('WinBFS.EXE')
     [compress_success, output_file] = compress_dir_7z(directory_path, output_file=None)
 
     if not compress_success:
