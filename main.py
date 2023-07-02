@@ -16,6 +16,7 @@ import boto3
 from botocore.exceptions import ClientError
 from pathlib import Path
 import psutil
+import requests
 
 
 # --------------------------------------------------
@@ -302,6 +303,29 @@ def close_processes_by_name(process_name):
 
 
 # --------------------------------------------------
+def create_ami():
+    """Create an AMI of the current EC2 instance"""
+
+    try:
+        today_date = datetime.date.today().isoformat()
+        instance_id = requests.get(
+            "http://169.254.169.254/latest/meta-data/instance-id").text
+        logging.info("Instance ID: %s", instance_id)
+        ec2_client = boto3.client("ec2")
+        response = ec2_client.create_image(
+            InstanceId=instance_id,
+            Name="BestCaseInstance-" + today_date,
+            Description="BestCaseInstance-" + today_date,
+            NoReboot=False,
+        )
+        logging.info("Response: %s", response)
+        return True
+    except ClientError as client_error:
+        logging.critical("Creating AMI failed: %s", client_error)
+        return False
+    
+
+# --------------------------------------------------
 def main():
     """Do the heavy lifting of backing up the BestCase CLIENTS directory
     to an S3 bucket"""
@@ -366,6 +390,11 @@ def main():
             logging.warning("Sending backup failed w/o an exception code.")
             return False
         logging.info("Backup sent successfully.")
+        try:
+            prune_backups(s3_bucket, days=7, use_boto=use_boto3)
+            logging.info("Old backups pruned successfully.")
+        except Exception as prune_error:
+            logging.warning("Pruning backups failed: %s", prune_error)
         return True
     except ClientError as send_error:
         logging.critical("Sending backup failed: %s", send_error)
@@ -381,3 +410,17 @@ if __name__ == "__main__":
     end_time = datetime.datetime.now()
     elapsed_time = end_time - start_time
     logging.info("Elapsed time: %s", elapsed_time)
+    message = "BestCase backup completed successfully in " + str(elapsed_time)
+    subject = "BestCase backup completed successfully"
+    recipient = "arn:aws:sns:us-east-1:072429697173:BestCaseBackups"
+    try:
+        send_msg_sns(message, recipient, use_boto=True, subject=subject)
+    except Exception as sns_error:
+        logging.warning("Sending message to SNS topic failed: %s", sns_error)
+    """ 
+    Create an AMI of the current EC2 instance if it's Sunday 
+    This will stop the instance, create the AMI, and then start the instance
+    hence the need to run this after the backup is complete
+    """
+    if datetime.date.today().weekday() == 6:
+        create_ami()
