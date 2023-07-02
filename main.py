@@ -186,8 +186,6 @@ def send_msg_sns(message, recipient, use_boto=False, subject=None):
         message (str): The message to send.
         subject (str): The subject line.
         recipient (str): The SNS topic ARN to send the message to.
-        debug (bool): Whether to print debug messages.
-        log_file (str): The path to the log file.
 
     Returns:
         bool: True if sending to the SNS topic was sent successfully, False otherwise.
@@ -248,11 +246,13 @@ def prune_backups(s3_bucket, days=7, use_boto=False):
     if use_boto:
         try:
             s3_client = boto3.resource("s3")
+            s3_bucket = s3_bucket.replace("s3://", "")
             bucket = s3_client.Bucket(s3_bucket)
             for obj in bucket.objects.all():
                 if obj.last_modified < datetime.datetime.now(
                     datetime.timezone.utc
                 ) - datetime.timedelta(days=days):
+                    print(obj.key)
                     obj.delete()
             return True
         except ClientError as client_error:
@@ -340,6 +340,7 @@ def main():
         s3_bucket = config["s3_bucket"]
         debug = config["debug_mode"]
         use_boto3 = config["use_boto3"]
+        topic_arn = config["topic_arn"]
     else:
         logging.critical("No config file provided, exiting.")
         return False
@@ -352,6 +353,11 @@ def main():
 
     # Define location of log file
     log_file = tempfile.gettempdir() + "\\BestCaseBackup"
+
+    # if log file is too big, delete it
+    if os.path.exists(log_file):
+        if os.path.getsize(log_file) > 1000000:
+            os.remove(log_file)
 
     # Set logging level and start logging
     if debug:
@@ -388,6 +394,12 @@ def main():
         copy_success = send_backup(output_file, s3_bucket, use_boto3)
         if not copy_success:
             logging.warning("Sending backup failed w/o an exception code.")
+            message = "BestCase backup failed"
+            subject = "BestCase backup failed"
+            try:
+                send_msg_sns(message, topic_arn, use_boto=True, subject=subject)
+            except Exception as sns_error:
+                logging.warning("Sending message to SNS topic failed: %s", sns_error)
             return False
         logging.info("Backup sent successfully.")
         try:
@@ -400,6 +412,7 @@ def main():
         logging.critical("Sending backup failed: %s", send_error)
         return False
     finally:
+        logging.info("Removing compressed file: %s", output_file)
         os.remove(output_file)
 
 
@@ -410,13 +423,6 @@ if __name__ == "__main__":
     end_time = datetime.datetime.now()
     elapsed_time = end_time - start_time
     logging.info("Elapsed time: %s", elapsed_time)
-    message = "BestCase backup completed successfully in " + str(elapsed_time)
-    subject = "BestCase backup completed successfully"
-    recipient = "arn:aws:sns:us-east-1:072429697173:BestCaseBackups"
-    try:
-        send_msg_sns(message, recipient, use_boto=True, subject=subject)
-    except Exception as sns_error:
-        logging.warning("Sending message to SNS topic failed: %s", sns_error)
     """ 
     Create an AMI of the current EC2 instance if it's Sunday 
     This will stop the instance, create the AMI, and then start the instance

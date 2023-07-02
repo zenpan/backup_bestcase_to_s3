@@ -152,6 +152,8 @@ def create_config_file(use_boto3):
     # Prompt for AWS S3 bucket for backups
     test_s3_bucket_exists = False
     s3_bucket_defined = False
+    topic_arn = input("What is the ARN of the SNS topic to use? E.g. arn:aws:sns:us-east-1:123456789012:my-topic: ")
+    config["topic_arn"] = topic_arn
 
     while not s3_bucket_defined:
         do_create_s3_bucket = input(
